@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>March Madness 2026 — My Bracket</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --surface2: #1a1f2b;
+    --border: #242938;
+    --accent: #ff6b00;
+    --accent2: #ffd60a;
+    --correct: #22c55e;
+    --wrong: #ef4444;
+    --pending: #6b7280;
+    --text: #e8eaf0;
+    --text-muted: #6b7280;
+    --pick-glow: rgba(255,107,0,0.25);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: auto;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, #0d0f16 0%, #12151c 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 30px rgba(255,107,0,0.15);
+  }
+
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    letter-spacing: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .score-board {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .score-item {
+    text-align: center;
+  }
+
+  .score-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .score-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .score-item.correct .score-num { color: var(--correct); }
+  .score-item.wrong .score-num { color: var(--wrong); }
+  .score-item.pending .score-num { color: var(--text-muted); }
+  .score-item.pts .score-num { color: var(--accent2); }
+
+  .divider { width: 1px; height: 40px; background: var(--border); }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 10px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    flex-wrap: wrap;
+  }
+
+  .leg { display: flex; align-items: center; gap: 6px; }
+  .leg-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .leg-dot.my-pick { background: var(--accent); }
+  .leg-dot.correct { background: var(--correct); }
+  .leg-dot.wrong { background: var(--wrong); }
+  .leg-dot.pending { background: var(--pending); border: 1px solid var(--text-muted); }
+
+  .legend span { color: var(--text-muted); }
+
+  /* Bracket layout */
+  .bracket-container {
+    padding: 24px 16px;
+    overflow-x: auto;
+  }
+
+  .bracket-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 4px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+
+  /* Region tabs */
+  .region-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px;
+    margin-bottom: 0;
+    overflow-x: auto;
+  }
+
+  .region-tab {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 10px 22px;
+    border: none;
+    cursor: pointer;
+    background: var(--surface);
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .region-tab:hover { color: var(--text); background: var(--surface2); }
+  .region-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--surface2); }
+  .region-tab.finals-tab { color: var(--accent2); }
+  .region-tab.finals-tab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+
+  /* Bracket view */
+  .bracket-view { display: none; }
+  .bracket-view.active { display: block; }
+
+  .bracket-grid {
+    display: flex;
+    gap: 0;
+    min-width: 900px;
+    padding: 16px 0;
+  }
+
+  .round-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .round-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-align: center;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  .matchups-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 4px 6px;
+    gap: 8px;
+  }
+
+  /* Matchup */
+  .matchup {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    transition: box-shadow 0.2s;
+  }
+
+  .matchup:hover { box-shadow: 0 0 0 1px var(--accent); }
+
+  .matchup-team {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+    min-height: 34px;
+  }
+
+  .matchup-team:first-child { border-bottom: 1px solid var(--border); }
+
+  .matchup-team:hover { background: var(--surface2); }
+
+  .matchup-team.is-winner { background: rgba(255,107,0,0.08); }
+
+  .seed {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    min-width: 16px;
+    text-align: center;
+  }
+
+  .team-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .team-name.tbd { color: var(--text-muted); font-style: italic; }
+
+  /* Pick indicator */
+  .pick-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .pick-dot.is-pick { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .pick-dot.is-correct { background: var(--correct); box-shadow: 0 0 6px var(--correct); }
+  .pick-dot.is-wrong { background: var(--wrong); box-shadow: 0 0 6px var(--wrong); }
+  .pick-dot.none { background: transparent; }
+
+  /* Status stripe on left */
+  .matchup-team::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+  }
+
+  .matchup-team.result-correct::before { background: var(--correct); }
+  .matchup-team.result-wrong::before { background: var(--wrong); }
+
+  /* Winner crown */
+  .crown { font-size: 0.7rem; margin-left: 2px; }
+
+  /* Connector lines - CSS approach */
+  .round-col { position: relative; }
+
+  /* Finals */
+  .finals-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    padding: 24px 16px;
+  }
+
+  .finals-section {
+    width: 100%;
+    max-width: 700px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .finals-header {
+    background: linear-gradient(90deg, var(--surface2), var(--bg));
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 3px;
+    color: var(--accent);
+  }
+
+  .finals-match {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .finals-match:last-child { border-bottom: none; }
+
+  .finals-team {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+
+  .finals-team:hover { border-color: var(--accent); }
+  .finals-team.is-winner { background: rgba(255,107,0,0.1); border-color: var(--accent); }
+
+  .finals-vs {
+    font-family: 'Bebas Neue', sans-serif;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+  }
+
+  /* Champion display */
+  .champion-box {
+    text-align: center;
+    padding: 32px;
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(255,107,0,0.05) 100%);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .champion-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 5px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .champion-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    line-height: 1;
+  }
+
+  .champion-status {
+    margin-top: 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  /* Instruction */
+  .instruction {
+    text-align: center;
+    padding: 12px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  /* Reset button */
+  .reset-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover { border-color: var(--wrong); color: var(--wrong); }
+
+  /* Points badge */
+  .pts-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.75rem;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(255,214,10,0.15);
+    color: var(--accent2);
+    margin-left: auto;
+  }
+
+  @media (max-width: 600px) {
+    header { flex-direction: column; gap: 12px; padding: 14px 16px; }
+    header h1 { font-size: 1.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏀 March Madness 2026</h1>
+  <div class="score-board">
+    <div class="score-item correct">
+      <div class="score-num" id="score-correct">0</div>
+      <div class="score-label">Correct</div>
+    </div>
+    <div class="divider"></div>
+    <div class="score-item wrong">
+      <div class="score-num" id="score-wrong">0</div>
+      <div class="score-label">Wrong</div>
+    </div>
+    <div class="divider"></div>
+    <div class="score-item pending">
+      <div class="score-num" id="score-pending">0</div>
+      <div class="score-label">Pending</div>
+    </div>
+    <div class="divider"></div>
+    <div class="score-item pts">
+      <div class="score-num" id="score-pts">0</div>
+      <div class="score-label">Points</div>
+    </div>
+    <button class="reset-btn" onclick="resetAll()">Reset</button>
+  </div>
+</header>
+
+<div class="legend">
+  <span style="font-family:'Bebas Neue';letter-spacing:2px;color:var(--text)">LEGEND:</span>
+  <div class="leg"><div class="leg-dot my-pick"></div><span>Tu pick</span></div>
+  <div class="leg"><div class="leg-dot correct"></div><span>Correcto ✓</span></div>
+  <div class="leg"><div class="leg-dot wrong"></div><span>Incorrecto ✗</span></div>
+  <div class="leg"><div class="leg-dot pending"></div><span>Sin jugar</span></div>
+  <span style="margin-left:auto;font-size:0.7rem">Haz click en el ganador real de cada partido</span>
+</div>
+
+<div class="instruction">
+  👆 Haz click en el equipo que REALMENTE ganó cada partido para registrar el resultado
+</div>
+
+<!-- Region Tabs -->
+<div class="region-tabs">
+  <button class="region-tab active" onclick="showRegion('east')">🔵 East</button>
+  <button class="region-tab" onclick="showRegion('west')">🟢 West</button>
+  <button class="region-tab" onclick="showRegion('midwest')">🟡 Midwest</button>
+  <button class="region-tab" onclick="showRegion('south')">🔴 South</button>
+  <button class="region-tab finals-tab" onclick="showRegion('finals')">🏆 Final Four</button>
+</div>
+
+<div class="bracket-container">
+
+  <!-- EAST REGION -->
+  <div class="bracket-view active" id="view-east">
+    <div class="bracket-grid" id="grid-east"></div>
+  </div>
+
+  <!-- WEST REGION -->
+  <div class="bracket-view" id="view-west">
+    <div class="bracket-grid" id="grid-west"></div>
+  </div>
+
+  <!-- MIDWEST REGION -->
+  <div class="bracket-view" id="view-midwest">
+    <div class="bracket-grid" id="grid-midwest"></div>
+  </div>
+
+  <!-- SOUTH REGION -->
+  <div class="bracket-view" id="view-south">
+    <div class="bracket-grid" id="grid-south"></div>
+  </div>
+
+  <!-- FINAL FOUR -->
+  <div class="bracket-view" id="view-finals">
+    <div class="finals-grid" id="grid-finals"></div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// BRACKET DATA — 2026 NCAA Tournament
+// picks: YOUR picks (will be updated when you send photo)
+// ============================================================
+
+// Points per round
+const ROUND_POINTS = { r64: 1, r32: 2, s16: 4, e8: 8, f4: 16, champ: 32 };
+
+// Structure: each region has 8 first-round matchups (seeds top to bottom)
+const BRACKET = {
+  east: {
+    name: 'EAST', color: '#3b82f6',
+    r64: [
+      { id: 'e1',  t1: {seed:1,  name:'Duke'},          t2: {seed:16, name:'Siena'},          pick: 'Duke' },
+      { id: 'e2',  t1: {seed:8,  name:'Ohio State'},    t2: {seed:9,  name:'TCU'},            pick: 'TCU' },
+      { id: 'e3',  t1: {seed:5,  name:"St. John's"},    t2: {seed:12, name:'Northern Iowa'},  pick: "St. John's" },
+      { id: 'e4',  t1: {seed:4,  name:'Kansas'},        t2: {seed:13, name:'Cal Baptist'},    pick: 'Kansas' },
+      { id: 'e5',  t1: {seed:6,  name:'Louisville'},    t2: {seed:11, name:'South Florida'},  pick: 'Louisville' },
+      { id: 'e6',  t1: {seed:3,  name:'Michigan State'},t2: {seed:14, name:'North Dakota St'},pick: 'Michigan State' },
+      { id: 'e7',  t1: {seed:7,  name:'UCLA'},          t2: {seed:10, name:'UCF'},            pick: 'UCLA' },
+      { id: 'e8',  t1: {seed:2,  name:'UConn'},         t2: {seed:15, name:'Furman'},         pick: 'UConn' },
+    ],
+    //            [1vs16 winner, 8vs9 winner]  [5vs12, 4vs13]  [6vs11, 3vs14]  [7vs10, 2vs15]
+    r32picks:  ['Duke', 'Kansas', 'Louisville', 'UConn'],
+    s16picks:  ['Duke', 'UConn'],
+    e8picks:   ['Duke'],
+    f4pick:    'Duke',
+  },
+  west: {
+    name: 'WEST', color: '#22c55e',
+    r64: [
+      { id: 'w1',  t1: {seed:1,  name:'Arizona'},      t2: {seed:16, name:'LIU'},            pick: 'Arizona' },
+      { id: 'w2',  t1: {seed:8,  name:'Villanova'},    t2: {seed:9,  name:'Utah State'},     pick: 'Utah State' },
+      { id: 'w3',  t1: {seed:5,  name:'Wisconsin'},    t2: {seed:12, name:'High Point'},     pick: 'Wisconsin' },
+      { id: 'w4',  t1: {seed:4,  name:'Arkansas'},     t2: {seed:13, name:'Hawaii'},         pick: 'Arkansas' },
+      { id: 'w5',  t1: {seed:6,  name:'BYU'},          t2: {seed:11, name:'Texas'},          pick: 'BYU' },
+      { id: 'w6',  t1: {seed:3,  name:'Gonzaga'},      t2: {seed:14, name:'Kennesaw State'}, pick: 'Gonzaga' },
+      { id: 'w7',  t1: {seed:7,  name:'Miami (FL)'},   t2: {seed:10, name:'Missouri'},       pick: 'Miami (FL)' },
+      { id: 'w8',  t1: {seed:2,  name:'Purdue'},       t2: {seed:15, name:'Queens'},         pick: 'Purdue' },
+    ],
+    r32picks:  ['Arizona', 'Wisconsin', 'Gonzaga', 'Purdue'],
+    s16picks:  ['Arizona', 'Purdue'],
+    e8picks:   ['Arizona'],
+    f4pick:    'Arizona',
+  },
+  midwest: {
+    name: 'MIDWEST', color: '#eab308',
+    r64: [
+      { id: 'm1',  t1: {seed:1,  name:'Michigan'},     t2: {seed:16, name:'UMBC'},           pick: 'Michigan' },
+      { id: 'm2',  t1: {seed:8,  name:'Georgia'},      t2: {seed:9,  name:'Saint Louis'},    pick: 'Georgia' },
+      { id: 'm3',  t1: {seed:5,  name:'Texas Tech'},   t2: {seed:12, name:'Akron'},          pick: 'Texas Tech' },
+      { id: 'm4',  t1: {seed:4,  name:'Alabama'},      t2: {seed:13, name:'Hofstra'},        pick: 'Alabama' },
+      { id: 'm5',  t1: {seed:6,  name:'Tennessee'},    t2: {seed:11, name:'SMU'},            pick: 'Tennessee' },
+      { id: 'm6',  t1: {seed:3,  name:'Virginia'},     t2: {seed:14, name:'Wright State'},   pick: 'Virginia' },
+      { id: 'm7',  t1: {seed:7,  name:'Kentucky'},     t2: {seed:10, name:'Santa Clara'},    pick: 'Kentucky' },
+      { id: 'm8',  t1: {seed:2,  name:'Iowa State'},   t2: {seed:15, name:'Tennessee State'},pick: 'Iowa State' },
+    ],
+    r32picks:  ['Michigan', 'Alabama', 'Tennessee', 'Iowa State'],
+    s16picks:  ['Michigan', 'Iowa State'],
+    e8picks:   ['Michigan'],
+    f4pick:    'Michigan',
+  },
+  south: {
+    name: 'SOUTH', color: '#ef4444',
+    r64: [
+      { id: 's1',  t1: {seed:1,  name:'Florida'},       t2: {seed:16, name:'Prairie View A&M'},pick: 'Florida' },
+      { id: 's2',  t1: {seed:8,  name:'Clemson'},       t2: {seed:9,  name:'Iowa'},            pick: 'Clemson' },
+      { id: 's3',  t1: {seed:5,  name:'Vanderbilt'},    t2: {seed:12, name:'McNeese'},         pick: 'McNeese' },
+      { id: 's4',  t1: {seed:4,  name:'Nebraska'},      t2: {seed:13, name:'Troy'},            pick: 'Nebraska' },
+      { id: 's5',  t1: {seed:6,  name:'North Carolina'},t2: {seed:11, name:'VCU'},             pick: 'North Carolina' },
+      { id: 's6',  t1: {seed:3,  name:'Illinois'},      t2: {seed:14, name:'Penn'},            pick: 'Illinois' },
+      { id: 's7',  t1: {seed:7,  name:"Saint Mary's"},  t2: {seed:10, name:'Texas A&M'},       pick: 'Texas A&M' },
+      { id: 's8',  t1: {seed:2,  name:'Houston'},       t2: {seed:15, name:'Idaho'},           pick: 'Houston' },
+    ],
+    r32picks:  ['Florida', 'Nebraska', 'Illinois', 'Houston'],
+    s16picks:  ['Florida', 'Houston'],
+    e8picks:   ['Houston'],
+    f4pick:    'Houston',
+  },
+};
+
+// Final Four picks — tus picks reales del bracket
+// SF1: East (Duke) vs South (Houston) → pick: Duke
+// SF2: West (Arizona) vs Midwest (Michigan) → pick: Arizona
+// Champion: Duke
+const FINALS_PICKS = {
+  sf1: { t1pick: 'Duke', t2pick: 'Houston', mypick: 'Duke' },
+  sf2: { t1pick: 'Arizona', t2pick: 'Michigan', mypick: 'Arizona' },
+  champion: 'Duke',
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let state = loadState();
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('mm2026');
+    if (s) return JSON.parse(s);
+  } catch(e) {}
+  return { results: {}, r32results: {}, s16results: {}, e8results: {}, f4results: {}, champresult: null };
+}
+
+function saveState() {
+  localStorage.setItem('mm2026', JSON.stringify(state));
+}
+
+function resetAll() {
+  if (!confirm('¿Resetear todos los resultados?')) return;
+  state = { results: {}, r32results: {}, s16results: {}, e8results: {}, f4results: {}, champresult: null };
+  saveState();
+  renderAll();
+  updateScore();
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+
+const ROUND_NAMES = ['R64 — Round of 64', 'R32 — Round of 32', 'S16 — Sweet 16', 'E8 — Elite 8'];
+
+function renderRegion(region) {
+  const data = BRACKET[region];
+  const grid = document.getElementById('grid-' + region);
+  grid.innerHTML = '';
+
+  // Round of 64
+  const col64 = makeRoundCol(ROUND_NAMES[0]);
+  const mu64 = document.createElement('div');
+  mu64.className = 'matchups-col';
+  data.r64.forEach(m => {
+    mu64.appendChild(makeMatchup64(m, region));
+  });
+  col64.appendChild(mu64);
+  grid.appendChild(col64);
+
+  // Round of 32
+  const col32 = makeRoundCol(ROUND_NAMES[1]);
+  const mu32 = document.createElement('div');
+  mu32.className = 'matchups-col';
+  const r32pairs = [[0,1],[2,3],[4,5],[6,7]];
+  r32pairs.forEach((pair, i) => {
+    const pick = data.r32picks[i] || '?';
+    const result = state.r32results[region + '_r32_' + i] || null;
+    // Determine the two teams from r64 winners
+    const g1winner = state.results[data.r64[pair[0]].id] || null;
+    const g2winner = state.results[data.r64[pair[1]].id] || null;
+    mu32.appendChild(makeAdvancedMatchup(
+      region, 'r32', i, pick, result,
+      g1winner || '?', g2winner || '?',
+      data.r64[pair[0]], data.r64[pair[1]]
+    ));
+  });
+  col32.appendChild(mu32);
+  grid.appendChild(col32);
+
+  // Sweet 16
+  const col16 = makeRoundCol(ROUND_NAMES[2]);
+  const mu16 = document.createElement('div');
+  mu16.className = 'matchups-col';
+  [[0,1],[2,3]].forEach((pair, i) => {
+    const pick = data.s16picks[i] || '?';
+    const result = state.s16results[region + '_s16_' + i] || null;
+    const g1winner = state.r32results[region + '_r32_' + pair[0]] || null;
+    const g2winner = state.r32results[region + '_r32_' + pair[1]] || null;
+    mu16.appendChild(makeAdvancedMatchupS(region, 's16', i, pick, result, g1winner || '?', g2winner || '?'));
+  });
+  col16.appendChild(mu16);
+  grid.appendChild(col16);
+
+  // Elite 8
+  const col8 = makeRoundCol(ROUND_NAMES[3]);
+  const mu8 = document.createElement('div');
+  mu8.className = 'matchups-col';
+  const pick8 = data.e8picks[0] || '?';
+  const result8 = state.e8results[region + '_e8'] || null;
+  const g1w = state.s16results[region + '_s16_0'] || null;
+  const g2w = state.s16results[region + '_s16_1'] || null;
+  mu8.appendChild(makeAdvancedMatchupE8(region, pick8, result8, g1w || '?', g2w || '?'));
+  col8.appendChild(mu8);
+  grid.appendChild(col8);
+
+  // Regional champ display
+  const colChamp = makeRoundCol('Regional Champ');
+  const champDiv = document.createElement('div');
+  champDiv.className = 'matchups-col';
+  champDiv.style.justifyContent = 'center';
+  const winner = state.e8results[region + '_e8'] || data.e8picks[0];
+  const chDiv = document.createElement('div');
+  chDiv.className = 'matchup';
+  chDiv.style.padding = '14px 12px';
+  chDiv.style.textAlign = 'center';
+  chDiv.style.border = '1px solid ' + data.color;
+  chDiv.innerHTML = `
+    <div style="font-family:'Bebas Neue';font-size:1.3rem;color:${data.color};letter-spacing:2px">${data.name}</div>
+    <div style="font-family:'Barlow Condensed';font-size:1rem;font-weight:700;margin-top:6px">${winner || '?'}</div>
+    <div style="font-size:0.65rem;color:var(--text-muted);margin-top:4px;font-family:'Barlow Condensed';letter-spacing:1px">→ Final Four</div>
+  `;
+  champDiv.appendChild(chDiv);
+  colChamp.appendChild(champDiv);
+  grid.appendChild(colChamp);
+}
+
+function makeRoundCol(label) {
+  const col = document.createElement('div');
+  col.className = 'round-col';
+  const lbl = document.createElement('div');
+  lbl.className = 'round-label';
+  lbl.style.fontSize = '0.75rem';
+  lbl.textContent = label;
+  col.appendChild(lbl);
+  return col;
+}
+
+function makeMatchup64(m, region) {
+  const result = state.results[m.id] || null;
+  const div = document.createElement('div');
+  div.className = 'matchup';
+  [m.t1, m.t2].forEach(team => {
+    const row = document.createElement('div');
+    row.className = 'matchup-team';
+    const isPick = m.pick === team.name;
+    const isWinner = result === team.name;
+    if (isWinner) row.classList.add('is-winner');
+
+    // Status
+    let dotClass = 'none';
+    let barClass = '';
+    if (isPick && result) {
+      if (result === team.name) { dotClass = 'is-correct'; barClass = 'result-correct'; }
+      else if (result && result !== team.name) { /* pick was this but result was other */ }
+    }
+    if (isPick && result && result !== team.name) dotClass = 'is-wrong';
+    if (isPick && !result) dotClass = 'is-pick';
+    if (result === team.name && isPick) { dotClass = 'is-correct'; barClass = 'result-correct'; }
+    if (isPick && result && result !== team.name) { dotClass = 'is-wrong'; }
+    // If the WRONG team won and my pick was the other team
+    if (!isPick && result === team.name) barClass = '';
+    if (isPick && result === team.name) barClass = 'result-correct';
+    if (isPick && result && result !== team.name) barClass = 'result-wrong';
+
+    if (barClass) row.classList.add(barClass);
+
+    row.innerHTML = `
+      <span class="seed">${team.seed}</span>
+      <span class="team-name${team.name==='?' ? ' tbd' : ''}">${team.name}${isPick ? ' <span class="crown" title="Tu pick">⭐</span>' : ''}</span>
+      <span class="pick-dot ${dotClass}"></span>
+      ${isWinner ? '<span style="font-size:0.65rem;color:var(--text-muted);margin-left:2px">✓</span>' : ''}
+    `;
+    row.onclick = () => setResult64(m.id, team.name, region);
+    div.appendChild(row);
+  });
+  return div;
+}
+
+function setResult64(matchId, winner, region) {
+  if (state.results[matchId] === winner) {
+    delete state.results[matchId]; // toggle off
+  } else {
+    state.results[matchId] = winner;
+  }
+  saveState();
+  renderRegion(region);
+  updateScore();
+}
+
+function makeAdvancedMatchup(region, round, idx, pick, result, t1name, t2name, m1data, m2data) {
+  const key = region + '_' + round + '_' + idx;
+  const div = document.createElement('div');
+  div.className = 'matchup';
+
+  [t1name, t2name].forEach((tname, ti) => {
+    const row = document.createElement('div');
+    row.className = 'matchup-team';
+    if (tname === '?') row.style.opacity = '0.5';
+    const isPick = pick === tname;
+    const isResult = result === tname;
+    if (isResult) row.classList.add('is-winner');
+
+    let dotClass = 'none';
+    if (isPick && !result) dotClass = 'is-pick';
+    if (isPick && result === tname) { dotClass = 'is-correct'; row.classList.add('result-correct'); }
+    if (isPick && result && result !== tname) { dotClass = 'is-wrong'; row.classList.add('result-wrong'); }
+
+    row.innerHTML = `
+      <span class="team-name${tname === '?' ? ' tbd' : ''}">${tname}${isPick ? ' <span class="crown">⭐</span>' : ''}</span>
+      <span class="pick-dot ${dotClass}"></span>
+    `;
+    if (tname !== '?') {
+      row.onclick = () => setResultAdv(key, tname, region, round, idx);
+    }
+    div.appendChild(row);
+  });
+  return div;
+}
+
+function makeAdvancedMatchupS(region, round, idx, pick, result, t1name, t2name) {
+  return makeAdvancedMatchup(region, round, idx, pick, result, t1name, t2name, null, null);
+}
+
+function makeAdvancedMatchupE8(region, pick, result, t1name, t2name) {
+  const key = region + '_e8';
+  const div = document.createElement('div');
+  div.className = 'matchup';
+
+  [t1name, t2name].forEach(tname => {
+    const row = document.createElement('div');
+    row.className = 'matchup-team';
+    if (tname === '?') row.style.opacity = '0.5';
+    const isPick = pick === tname;
+    const isResult = result === tname;
+    if (isResult) row.classList.add('is-winner');
+
+    let dotClass = 'none';
+    if (isPick && !result) dotClass = 'is-pick';
+    if (isPick && result === tname) { dotClass = 'is-correct'; row.classList.add('result-correct'); }
+    if (isPick && result && result !== tname) { dotClass = 'is-wrong'; row.classList.add('result-wrong'); }
+
+    row.innerHTML = `
+      <span class="team-name${tname === '?' ? ' tbd' : ''}">${tname}${isPick ? ' <span class="crown">⭐</span>' : ''}</span>
+      <span class="pick-dot ${dotClass}"></span>
+    `;
+    if (tname !== '?') {
+      row.onclick = () => {
+        if (state.e8results[key] === tname) delete state.e8results[key];
+        else state.e8results[key] = tname;
+        saveState();
+        renderRegion(region);
+        renderFinals();
+        updateScore();
+      };
+    }
+    div.appendChild(row);
+  });
+  return div;
+}
+
+function setResultAdv(key, winner, region, round, idx) {
+  const storeKey = round === 'r32' ? 'r32results' : round === 's16' ? 's16results' : 'e8results';
+  if (state[storeKey][key] === winner) delete state[storeKey][key];
+  else state[storeKey][key] = winner;
+  saveState();
+  renderRegion(region);
+  renderFinals();
+  updateScore();
+}
+
+// ============================================================
+// FINALS
+// ============================================================
+function renderFinals() {
+  const grid = document.getElementById('grid-finals');
+  grid.innerHTML = '';
+
+  // Determine Final Four teams from E8 results
+  const eastChamp = state.e8results['east_e8'] || BRACKET.east.e8picks[0] || '?';
+  const westChamp = state.e8results['west_e8'] || BRACKET.west.e8picks[0] || '?';
+  const midChamp = state.e8results['midwest_e8'] || BRACKET.midwest.e8picks[0] || '?';
+  const southChamp = state.e8results['south_e8'] || BRACKET.south.e8picks[0] || '?';
+
+  // SF1: East vs South
+  const sf1 = makeFinalMatchup('sf1', eastChamp, southChamp, FINALS_PICKS.sf1.mypick, 'SEMIFINAL 1 — East vs South');
+  grid.appendChild(sf1);
+
+  // SF2: West vs Midwest
+  const sf2 = makeFinalMatchup('sf2', westChamp, midChamp, FINALS_PICKS.sf2.mypick, 'SEMIFINAL 2 — West vs Midwest');
+  grid.appendChild(sf2);
+
+  // Championship
+  const champT1 = state.f4results['sf1'] || FINALS_PICKS.sf1.mypick || '?';
+  const champT2 = state.f4results['sf2'] || FINALS_PICKS.sf2.mypick || '?';
+  const champDiv = makeFinalMatchup('champ', champT1, champT2, FINALS_PICKS.champion, '🏆 NATIONAL CHAMPIONSHIP');
+  grid.appendChild(champDiv);
+
+  // Champion display
+  const champWinner = state.f4results['champ'];
+  const champBox = document.createElement('div');
+  champBox.className = 'champion-box';
+  champBox.innerHTML = `
+    <div class="champion-label">🏆 CHAMPION 2026</div>
+    <div class="champion-name">${champWinner || '???'}</div>
+    <div class="champion-status">${
+      !champWinner ? 'Por determinar' :
+      champWinner === FINALS_PICKS.champion ? '✅ ¡ACERTASTE EL CAMPEÓN!' :
+      '❌ No fue tu pick (' + FINALS_PICKS.champion + ')'
+    }</div>
+  `;
+  grid.appendChild(champBox);
+}
+
+function makeFinalMatchup(key, t1, t2, pick, title) {
+  const section = document.createElement('div');
+  section.className = 'finals-section';
+  section.innerHTML = `<div class="finals-header">${title}</div>`;
+
+  const match = document.createElement('div');
+  match.className = 'finals-match';
+
+  const result = state.f4results[key] || null;
+
+  [t1, t2].forEach((tname, idx) => {
+    const team = document.createElement('div');
+    team.className = 'finals-team';
+    const isPick = pick === tname;
+    const isWinner = result === tname;
+    if (isWinner) team.classList.add('is-winner');
+
+    let dot = 'none', indicator = '';
+    if (isPick && !result) { dot = 'is-pick'; }
+    if (isPick && result === tname) { dot = 'is-correct'; indicator = '✅'; }
+    if (isPick && result && result !== tname) { dot = 'is-wrong'; indicator = '❌'; }
+
+    team.innerHTML = `
+      <span class="pick-dot ${dot}"></span>
+      <span style="font-family:'Barlow Condensed';font-weight:700;font-size:1rem">${tname}${isPick ? ' ⭐' : ''}</span>
+      ${isWinner ? '<span style="margin-left:auto;color:var(--correct)">✓ WINNER</span>' : ''}
+      ${indicator ? `<span style="margin-left:auto">${indicator}</span>` : ''}
+    `;
+
+    if (tname !== '?') {
+      team.onclick = () => {
+        if (state.f4results[key] === tname) delete state.f4results[key];
+        else state.f4results[key] = tname;
+        saveState();
+        renderFinals();
+        updateScore();
+      };
+    }
+
+    match.appendChild(team);
+    if (idx === 0) {
+      const vs = document.createElement('div');
+      vs.className = 'finals-vs';
+      vs.textContent = 'VS';
+      match.appendChild(vs);
+    }
+  });
+
+  section.appendChild(match);
+  return section;
+}
+
+// ============================================================
+// SCORE
+// ============================================================
+function updateScore() {
+  let correct = 0, wrong = 0, pending = 0, pts = 0;
+
+  // R64
+  Object.values(BRACKET).forEach(region => {
+    region.r64.forEach(m => {
+      const result = state.results[m.id];
+      if (!result) { pending++; return; }
+      if (result === m.pick) { correct++; pts += ROUND_POINTS.r64; }
+      else wrong++;
+    });
+
+    // R32
+    region.r32picks.forEach((pick, i) => {
+      const key = region.name.toLowerCase().replace(' ','') + '_r32_' + i;
+      // Use the right key format
+      const rkey = Object.keys(state.r32results).find(k => k.endsWith('_r32_' + i) && k.startsWith(getRegionKey(region.name)));
+      const result = rkey ? state.r32results[rkey] : null;
+      if (!result) { pending++; return; }
+      if (result === pick) { correct++; pts += ROUND_POINTS.r32; }
+      else wrong++;
+    });
+
+    // S16
+    region.s16picks.forEach((pick, i) => {
+      const rkey = Object.keys(state.s16results).find(k => k.endsWith('_s16_' + i) && k.startsWith(getRegionKey(region.name)));
+      const result = rkey ? state.s16results[rkey] : null;
+      if (!result) { pending++; return; }
+      if (result === pick) { correct++; pts += ROUND_POINTS.s16; }
+      else wrong++;
+    });
+
+    // E8
+    const e8key = getRegionKey(region.name) + '_e8';
+    const e8result = state.e8results[e8key];
+    if (!e8result) { pending++; }
+    else if (e8result === region.e8picks[0]) { correct++; pts += ROUND_POINTS.e8; }
+    else wrong++;
+
+    // F4 pick
+    const f4pick = region.f4pick;
+    // This is covered in finals
+  });
+
+  // Finals
+  ['sf1','sf2'].forEach(key => {
+    const res = state.f4results[key];
+    const pick = FINALS_PICKS[key].mypick;
+    if (!res) pending++;
+    else if (res === pick) { correct++; pts += ROUND_POINTS.f4; }
+    else wrong++;
+  });
+
+  const champRes = state.f4results['champ'];
+  if (!champRes) pending++;
+  else if (champRes === FINALS_PICKS.champion) { correct++; pts += ROUND_POINTS.champ; }
+  else wrong++;
+
+  document.getElementById('score-correct').textContent = correct;
+  document.getElementById('score-wrong').textContent = wrong;
+  document.getElementById('score-pending').textContent = pending;
+  document.getElementById('score-pts').textContent = pts;
+}
+
+function getRegionKey(regionName) {
+  const map = { EAST: 'east', WEST: 'west', MIDWEST: 'midwest', SOUTH: 'south' };
+  return map[regionName] || regionName.toLowerCase();
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function showRegion(region) {
+  document.querySelectorAll('.bracket-view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.region-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + region).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function renderAll() {
+  ['east','west','midwest','south'].forEach(r => renderRegion(r));
+  renderFinals();
+}
+
+renderAll();
+updateScore();
+</script>
+</body>
+</html>
